@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="custom_components/stb_bucuresti/icon@2x.png" alt="STB Bucuresti Logo" width="150">
+  <img src="custom_components/stb_bucuresti/brand/icon@2x.png" alt="STB Bucuresti Logo" width="150">
 </p>
 
 <h1 align="center">STB Bucuresti - Home Assistant Unofficial Integration</h1>
