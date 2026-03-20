@@ -1,0 +1,38 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "STB Bucuresti",
+                "description": "Aceasta integrare ofera urmarirea in timp real a vehiculelor de transport public (tramvaie, autobuze, troleibuze) din Bucuresti.\n\nApasa Continua pentru a te conecta la API-ul STB si pentru a selecta liniile pe care vrei sa le monitorizezi."
+            },
+            "select_lines": {
+                "title": "Selecteaza Liniile de Transport",
+                "description": "Selecteaza liniile de transport pe care vrei sa le monitorizezi. Pentru fiecare linie se vor crea senzori pentru urmarirea vehiculelor.",
+                "data": {
+                    "lines": "Linii de Transport",
+                    "update_interval": "Interval de actualizare (secunde)"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Nu s-a putut conecta la API-ul STB. Te rugam sa incerci din nou mai tarziu.",
+            "no_lines": "Nu s-au gasit linii de transport. Te rugam sa incerci din nou mai tarziu.",
+            "no_lines_selected": "Te rugam sa selectezi cel putin o linie de transport.",
+            "unknown": "A aparut o eroare neasteptata."
+        },
+        "abort": {
+            "already_configured": "Aceste linii sunt deja configurate."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Setari STB Bucuresti",
+                "description": "Se monitorizează în prezent {lines_count} linii.",
+                "data": {
+                    "update_interval": "Interval de actualizare (secunde)"
+                }
+            }
+        }
+    }
+}

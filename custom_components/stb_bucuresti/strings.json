@@ -1,0 +1,53 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "STB Bucuresti",
+                "description": "This integration provides real-time tracking of public transport vehicles (trams, buses, trolleybuses) in Bucharest, Romania.\n\nClick Submit to connect to the STB API and select the lines you want to monitor."
+            },
+            "select_lines": {
+                "title": "Select Transport Lines",
+                "description": "Select the transport lines you want to monitor. Each line will create sensors for vehicle tracking.",
+                "data": {
+                    "lines": "Transport Lines",
+                    "update_interval": "Update interval (seconds)"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to STB API. Please try again later.",
+            "no_lines": "No transport lines found. Please try again later.",
+            "no_lines_selected": "Please select at least one transport line.",
+            "unknown": "An unexpected error occurred."
+        },
+        "abort": {
+            "already_configured": "These lines are already configured."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "STB Bucuresti Settings",
+                "description": "Currently monitoring {lines_count} lines.",
+                "data": {
+                    "update_interval": "Update interval (seconds)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "line_vehicle_count": {
+                "name": "Line {line_name} - Active Vehicles"
+            },
+            "total_vehicles": {
+                "name": "Total Active Vehicles"
+            }
+        },
+        "device_tracker": {
+            "vehicle": {
+                "name": "{vehicle_type} {vehicle_number} - Line {line_name}"
+            }
+        }
+    }
+}
