@@ -35,25 +35,33 @@ You can create automations that trigger when a phone (person) is near a specific
 
 **Example automation:**
 ```yaml
-automation:
-  - alias: "Notify when near Tram 41"
-    trigger:
-      - platform: template
-        value_template: >
-          {% set phone_lat = state_attr('device_tracker.my_phone', 'latitude') %}
-          {% set phone_lon = state_attr('device_tracker.my_phone', 'longitude') %}
-          {% for state in states.device_tracker if 'stb_57_' in state.entity_id %}
-            {% set vehicle_lat = state.attributes.latitude %}
-            {% set vehicle_lon = state.attributes.longitude %}
-            {% set dist = distance(phone_lat, phone_lon, vehicle_lat, vehicle_lon) %}
-            {% if dist and dist < 0.1 %}
-              true
-            {% endif %}
-          {% endfor %}
-    action:
-      - service: notify.mobile_app
-        data:
-          message: "You're near Tram 41!"
+description: "Notify when I'm near Tram 41"
+mode: single
+triggers:
+  - trigger: time_pattern
+    seconds: "/10"
+conditions: []
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {% set phone = 'device_tracker.my_phone' %}
+              {% set phone_lat = state_attr(phone, 'latitude') %}
+              {% set phone_lon = state_attr(phone, 'longitude') %}
+              {% if phone_lat and phone_lon %}
+                {% for state in states.device_tracker if 'stb_line41_' in state.entity_id %}
+                  {% set vlat = state.attributes.latitude %}
+                  {% set vlon = state.attributes.longitude %}
+                  {% if vlat and vlon and distance(phone_lat, phone_lon, vlat, vlon) < 0.1 %}
+                    true
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+        sequence:
+          - action: notify.mobile_app_my_phone
+            data:
+              message: "You're near Tram 41!"
 ```
 
 ## Installation
