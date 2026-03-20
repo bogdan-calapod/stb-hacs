@@ -16,8 +16,10 @@ from typing import Any
 from aiohttp import ClientSession, ClientTimeout
 
 from .const import (
+    API_APP_ID,
+    API_APP_KEY,
     API_BASE_URL,
-    API_HEADERS,
+    API_HEADERS_BASE,
     API_TIMEOUT,
 )
 
@@ -85,21 +87,78 @@ class STBApiClient:
         """Initialize the API client."""
         self._session = session
         self._timeout = ClientTimeout(total=API_TIMEOUT)
+        self._user_info: str | None = None
 
-    async def _get(self, endpoint: str) -> bytes:
+    async def _ensure_authenticated(self) -> None:
+        """Ensure we have a valid auth token."""
+        if self._user_info is not None:
+            return
+        
+        await self._authenticate()
+
+    async def _authenticate(self) -> None:
+        """Fetch a fresh auth token from the API."""
+        url = f"{API_BASE_URL}/proxy/user/auth"
+        headers = {
+            "App-key": API_APP_KEY,
+            "App-Id": API_APP_ID,
+            "User-Agent": API_HEADERS_BASE["User-Agent"],
+        }
+        
+        _LOGGER.debug("Authenticating with STB API")
+        
+        try:
+            async with self._session.get(
+                url,
+                headers=headers,
+                timeout=self._timeout,
+                ssl=_SSL_CTX,
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    self._user_info = data.get("data", {}).get("userInfo")
+                    if self._user_info:
+                        _LOGGER.debug("Successfully authenticated with STB API")
+                        return
+                
+                _LOGGER.error("Auth failed with status %s", response.status)
+                raise STBApiError(f"Authentication failed: HTTP {response.status}")
+        except STBApiError:
+            raise
+        except Exception as err:
+            _LOGGER.error("Auth error: %s", err)
+            raise STBApiConnectionError(f"Authentication error: {err}") from err
+
+    def _get_headers(self) -> dict[str, str]:
+        """Get headers with current auth token."""
+        headers = dict(API_HEADERS_BASE)
+        if self._user_info:
+            headers["User-Info"] = self._user_info
+        return headers
+
+    async def _get(self, endpoint: str, retry_auth: bool = True) -> bytes:
         """Make a GET request and return raw bytes."""
+        await self._ensure_authenticated()
+        
         url = f"{API_BASE_URL}{endpoint}"
         _LOGGER.debug("GET %s", url)
 
         try:
             async with self._session.get(
                 url,
-                headers=API_HEADERS,
+                headers=self._get_headers(),
                 timeout=self._timeout,
                 ssl=_SSL_CTX,
             ) as response:
                 if response.status == 200:
                     return await response.read()
+                
+                # Handle 412 Precondition Failed - token expired
+                if response.status == 412 and retry_auth:
+                    _LOGGER.info("Got 412, refreshing auth token")
+                    self._user_info = None
+                    await self._authenticate()
+                    return await self._get(endpoint, retry_auth=False)
                 
                 text = await response.text()
                 _LOGGER.error("HTTP %s: %s", response.status, text[:500])
@@ -116,12 +175,14 @@ class STBApiClient:
 
     async def async_get_agency_info(self) -> dict[str, Any]:
         """Get agency information (returns JSON)."""
+        await self._ensure_authenticated()
+        
         url = f"{API_BASE_URL}/agency?lang=ro"
         
         try:
             async with self._session.get(
                 url,
-                headers=API_HEADERS,
+                headers=self._get_headers(),
                 timeout=self._timeout,
                 ssl=_SSL_CTX,
             ) as response:
